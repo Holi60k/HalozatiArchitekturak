@@ -14,7 +14,7 @@ void printChosenLanguageAndSendToServer(int,int);
 void connectToServer(int *,struct sockaddr *);
 void toLowerCase(char[]);
 void toUpperCase(char[]); 
-
+int parseOrder(char[]);
 int main() {
   
   /**
@@ -41,7 +41,7 @@ int main() {
   char message[1023];
   char feedback[255];
   int read = 0;
-  
+  int sorrend = 0;
     
     //Nagybetűs üdvözlés
     memset(uzenet,0,255);
@@ -67,21 +67,38 @@ int main() {
     //error++;
     } while(choice !=1 && choice !=2);
     printChosenLanguageAndSendToServer(choice,serverFd);
+    
+    recv(serverFd,uzenet,255,0);
+    sorrend = parseOrder(uzenet);
+    printf("%d vagyok a felszolalasban.\n",sorrend);
     fflush(stdout);
     
+  int round = 1;
+  char lenyeg[255];
   while(1) {  
-    memset(uzenet,0,255);
-    read = recv(serverFd,uzenet,255,0);
-    uzenet[read] = '\0';
-    //translateMessageFromServer(choice,uzenet);
-    printf("%s",uzenet);
     
+    memset(lenyeg,0,255);
+    read = recv(serverFd,lenyeg,255,0);
+    lenyeg[read] = '\0';
+    printf("%s",lenyeg);
+    //printf("Kor:%d \nSorrend:%d\n",round,sorrend);
+    printf("round maradekos sorrend:%d\n",round % sorrend);
+    //Felszolalas kuldese.
+    if(round % sorrend == 0) {
+      memset(message,0,1023);
+      printf("Szolaljon fel kerem:");
+      gets(message);
+      printf("Felszolalas:%s\n",message);
+      send(serverFd,message,1023,0);
+    } else if (round % sorrend == 1) { //vélemény küldése
+      memset(feedback,0,255);
+      printf("Mondjon velemenyt kerem:");
+      gets(feedback);
+      printf("Velemeny:%s\n",feedback);
+      send(serverFd,feedback,255,0);
+    }
     
-    memset(message,0,1023);
-    strcpy(message,"Hello from the other side!");
-    //gets(message);
-    printf("Hossza:%d\nFelszolalas üzenete:%s\n",strlen(message),message);
-    send(serverFd,message,strlen(message),0);
+    round++;
     
   }
   
@@ -142,3 +159,9 @@ void toUpperCase(char message[]) {
   }
 }
 
+int parseOrder(char msg[]) {
+  if(strcmp(msg,"1") == 0) 
+    return 1;
+  if(strcmp(msg,"2") == 0) 
+    return 2;
+}

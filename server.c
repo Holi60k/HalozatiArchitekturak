@@ -81,7 +81,8 @@ int main() {
   recv(firstClient,messageFromClient,255,0);
   setChosenLanguage(messageFromClient,&firstLanguage);
   
-    
+  strcpy(serverMessage,"1");
+  send(firstClient,serverMessage,255,0);
   
   //Várakozunk a második kliens csatlakozására.
   memset(serverMessage,0,255);
@@ -101,45 +102,55 @@ int main() {
   recv(secondClient,messageFromClient,255,0);
   setChosenLanguage(messageFromClient,&secondLanguage);
   
+  strcpy(serverMessage,"2");
+  send(secondClient,serverMessage,255,0);
+  
   //memset(serverMessage,0,255);
-  strcpy(serverMessage,"A második resztvevo is csatlakozott.\nKezodhet a konferencia.\nOn az elso felszolalo.\nKerem mondja el a javaslatat:\n");
+  strcpy(serverMessage,"A második resztvevo is csatlakozott.\nKezodhet a konferencia.\nOn az elso felszolalo.\nKerem mondja el a javaslatat:");
   translateMessageForClient(firstLanguage,serverMessage);
   sendMessageToSocket(serverMessage,firstClient);
+  
+  strcpy(serverMessage,"Az elso resztvevo megfogalmazza a felszolalasat.\n");
+  translateMessageForClient(secondLanguage,serverMessage);
+  sendMessageToSocket(serverMessage,secondClient);
   
   memset(firstMessage,0,1023);
   memset(secondMessage,0,1023);
   memset(firstFeedback,0,255);
   memset(secondFeedback,0,255);
   int received = 0;
-  //while(1) {
+  while(1) {
     
     
     
-    //Első felszólal - második reagál.
+    //Első felszólal 
     received = recv(firstClient,firstMessage,1023,0);
     firstMessage[received] = '\0';
     printf("Elso kliens felszolalasa:%s\n",firstMessage);
     fflush(stdout);
-    //translateMessageForClient(secondLanguage,firstMessage);
+    translateMessageForClient(secondLanguage,firstMessage);
     send(secondClient,firstMessage,1023,0);
     
+    //második reagál
     recv(secondClient,secondFeedback,255,0);
     printf("Masodik kliens velemenye:%s\n",secondFeedback);
-    //translateMessageForClient(firstLanguage,secondFeedback);
+    translateMessageForClient(firstLanguage,secondFeedback);
     send(firstClient,secondFeedback,255,0);
     
     
-    //Második felszólal - első reagál.
+    //Második felszólal
     recv(secondClient,secondMessage,1023,0);
     printf("Masodik kliens felszolalasa:%s\n",secondMessage);
-    //translateMessageForClient(firstLanguage,secondMessage);
+    translateMessageForClient(firstLanguage,secondMessage);
     send(firstClient,secondMessage,1023,0);
+    
+    //első reagál
     recv(firstClient,firstFeedback,255,0);
     printf("Elso kliens velemenye:%s\n",firstFeedback);
-   // translateMessageForClient(secondLanguage,firstFeedback);
+    translateMessageForClient(secondLanguage,firstFeedback);
     send(secondClient,firstFeedback,255,0);
        
-  //}
+  }
   
   close(secondClient);
   close(firstClient);
