@@ -12,8 +12,6 @@ void initializeSocket(int *);
 void setSocketOpt(int *);
 void printChosenLanguageAndSendToServer(char[], int);
 void connectToServer(int *, struct sockaddr *);
-void toLowerCase(char[]);
-void toUpperCase(char[]);
 int parseOrder(char[]);
 int main() {
 
@@ -58,12 +56,15 @@ int main() {
 //	recv(serverFd, uzenet, 255, 0);
 //	printf("%s", uzenet);
 
-//do {
-//if(error >0)
-//printf("Valasszon ujra:");
-	fgets(choice, 255, stdin);
-	//error++;
-	//} while (strcmp(choice,"MAGYAR\n") != 0 || strcmp(choice,"magyar\n") != 0);
+	printf("Valaszthato nyelvek:MAGYAR - magyar\n");
+	printf("Kerem valasszon nyelvet:");
+	do {
+		if(error > 0)
+			printf("Valasszon ujra:");
+		gets(choice);
+		//printf("M:%d m:%d %s",strcmp(choice,"MAGYAR"),strcmp(choice,"magyar"),choice);
+		error++;
+	} while (strcmp(choice,"MAGYAR") != 0 && strcmp(choice,"magyar") != 0);
 	printChosenLanguageAndSendToServer(choice, serverFd);
 
 	recv(serverFd, uzenet, 255, 0);
@@ -75,10 +76,6 @@ int main() {
 	char lenyeg[255];
 	memset(lenyeg, 0, 255);
 	read = recv(serverFd, lenyeg, 255, 0);
-	//lenyeg[read] = '\0';
-	//printf("%s", lenyeg);
-
-	printf("Maradekos %d", round % sorrend);
 	char vote[255], anotherClientVote[255];
 	int msgS = 0, feedbS = 0;
 	for (;;) {
@@ -134,7 +131,9 @@ int main() {
 	close(serverFd);
 
 }
-
+/**
+* Socket inicializáló függvény
+*/
 void initializeSocket(int * sock) {
 
 	if ((*sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -142,7 +141,9 @@ void initializeSocket(int * sock) {
 		_exit(1);
 	}
 }
-
+/**
+* Socket beállítások beállítása
+*/
 void setSocketOpt(int * sock) {
 
 	int yes = 1;
@@ -151,20 +152,24 @@ void setSocketOpt(int * sock) {
 		_exit(1);
 	}
 }
-
+/**
+* Válaszott nyelv küldése a szervernek illetve kiíratása a standard kimenetre.
+*/
 void printChosenLanguageAndSendToServer(char choice[], int sock) {
 	char msg[255];
 	memset(msg, 0, 255);
-	if (strcmp(choice, "MAGYAR\n") == 0) {
-		//printf("A VALASZOTT NYELVE:MAGYAR.");
+	if (strcmp(choice, "MAGYAR") == 0) {
+		printf("A VALASZOTT NYELVE:MAGYAR.");
 		strcpy(msg, "NAGY");
-	} else if (strcmp(choice, "magyar\n") == 0) {
-		//printf("a valasztott nyelve:magyar.");
+	} else if (strcmp(choice, "magyar") == 0) {
+		printf("a valasztott nyelve:magyar.");
 		strcpy(msg, "kicsi");
 	}
 	send(sock, msg, 255, 0);
 }
-
+/**
+* Szerver való csatlakozás socketen keresztül.
+*/
 void connectToServer(int * servSock, struct sockaddr * serverAddr) {
 	if (connect(*servSock, serverAddr, sizeof(struct sockaddr)) == -1) {
 		perror("Nem sikerült a szervehez csatlakozni");
@@ -172,20 +177,9 @@ void connectToServer(int * servSock, struct sockaddr * serverAddr) {
 	}
 }
 
-void toLowerCase(char * message) {
-	int i;
-	for (i = 0; i < strlen(message); i++) {
-		message[i] = tolower(message[i]);
-	}
-}
-
-void toUpperCase(char message[]) {
-	int i;
-	for (i = 0; i < strlen(message); i++) {
-		message[i] = toupper(message[i]);
-	}
-}
-
+/**
+* Sorrend megállapítása
+*/
 int parseOrder(char msg[]) {
 	if (strcmp(msg, "1") == 0)
 		return 1;
