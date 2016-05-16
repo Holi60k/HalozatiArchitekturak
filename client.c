@@ -7,6 +7,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <ctype.h>
+#define MESSAGE_LIMIT = 1023
+#define FEEDBACK_LIMIT = 255
 
 void initializeSocket(int *);
 void setSocketOpt(int *);
@@ -36,8 +38,8 @@ int main() {
 	char uzenet[255];
 	char choice[255];
 	int error = 0;
-	char message[1023];
-	char feedback[255];
+	char message[MESSAGE_LIMIT];
+	char feedback[FEEDBACK_LIMIT];
 	int read = 0;
 	int sorrend = 0;
 
@@ -69,47 +71,59 @@ int main() {
 
 	recv(serverFd, uzenet, 255, 0);
 	sorrend = parseOrder(uzenet);
-	printf("%d vagyok a felszolalasban.", sorrend);
 	fflush(stdout);
 
-	int round = 1;
+	//A kört jelzi, hanyadik kör
+	int round = 1;	
 	char lenyeg[255];
 	memset(lenyeg, 0, 255);
 	read = recv(serverFd, lenyeg, 255, 0);
 	char vote[255], anotherClientVote[255];
+	//msgS = message sent, (felszólalás elküldte)
+	//feedbS = feedback sent, (vélemény elküldve)
 	int msgS = 0, feedbS = 0;
 	for (;;) {
 
 		//Felszolalas kuldese.
 		if (sorrend % 2 == 1) {
-			memset(message, 0, 1023);
+			//-----------------------------------
+			// Felszolalás küldése
+			//-----------------------------------
+			memset(message, 0, MESSAGE_LIMIT);
 			printf("Szolaljon fel kerem:");
 			fflush(stdout);
-			//scanf("%s%*[^\n]",&message);
-			fgets(message, 1023, stdin);
-
-			send(serverFd, message, 1023, 0);
-			memset(feedback, 0, 255);
-			read = recv(serverFd, feedback, 255, 0);
-			printf("Velemeny:%s", feedback);
+			fgets(message, MESSAGE_LIMIT, stdin);
+			send(serverFd, message, MESSAGE_LIMIT, 0);
+			//-----------------------------------
+			// Partner véleményének fogadása
+			//-----------------------------------
+			memset(feedback, 0, FEEDBACK_LIMIT);
+			read = recv(serverFd, feedback, FEEDBACK_LIMIT, 0);
+			printf("Masik fel velemenye:%s", feedback);
 			fflush(stdout);
 			msgS = 1;
+			//-----------------------------------
 
 		} else if (sorrend % 2 == 0) { //vélemény küldése
-
-			memset(message, 0, 1023);
-			read = recv(serverFd, message, 1023, 0);
-			printf("Felszolalas:%s", message);
+			//-------------------------------------------
+			// Partner felszólalásának fogadása.
+			//-------------------------------------------
+			memset(message, 0, MESSAGE_LIMIT);
+			read = recv(serverFd, message, MESSAGE_LIMIT, 0);
+			printf("Partner felszolalasa:%s", message);
 			fflush(stdout);
-
-			memset(feedback, 0, 255);
+			//-------------------------------------------
+			// Vélemény küldése
+			//-------------------------------------------
+			memset(feedback, 0, FEEDBACK_LIMIT);
 			printf("Mondjon velemenyt kerem:");
-			fgets(feedback, 255, stdin);
-			send(serverFd, feedback, 255, 0);
+			fgets(feedback, FEEDBACK_LIMIT, stdin);
+			send(serverFd, feedback, FEEDBACK_LIMIT, 0);
 			fflush(stdout);
 			feedbS = 1;
+			//-------------------------------------------
 		}
-
+		// Szavazás megfigyelése, akkor ha már volt egy felszólalás illetve vélemény küldés mind a két oldalon.
 		if (feedbS == 1 && msgS == 1) {
 			memset(lenyeg, 0, 255);
 			read = recv(serverFd, lenyeg, 255, 0);
@@ -159,10 +173,10 @@ void printChosenLanguageAndSendToServer(char choice[], int sock) {
 	char msg[255];
 	memset(msg, 0, 255);
 	if (strcmp(choice, "MAGYAR") == 0) {
-		printf("A VALASZOTT NYELVE:MAGYAR.");
+		printf("A VALASZOTT NYELVE:MAGYAR.\n");
 		strcpy(msg, "NAGY");
 	} else if (strcmp(choice, "magyar") == 0) {
-		printf("a valasztott nyelve:magyar.");
+		printf("a valasztott nyelve:magyar.\n");
 		strcpy(msg, "kicsi");
 	}
 	send(sock, msg, 255, 0);
