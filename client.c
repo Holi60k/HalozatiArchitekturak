@@ -70,11 +70,11 @@ int main() {
 	printChosenLanguageAndSendToServer(choice, serverFd);
 
 	recv(serverFd, uzenet, 255, 0);
+
+	//Megadja hogy hanyadikként írhatunk.
 	sorrend = parseOrder(uzenet);
 	fflush(stdout);
 
-	//A kört jelzi, hanyadik kör
-	int round = 1;	
 	char lenyeg[255];
 	memset(lenyeg, 0, 255);
 	read = recv(serverFd, lenyeg, 255, 0);
