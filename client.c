@@ -7,8 +7,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <ctype.h>
-#define MESSAGE_LIMIT = 1023
-#define FEEDBACK_LIMIT = 255
+#define MESSAGE_LIMIT 1023 + 1 
+#define FEEDBACK_LIMIT 255 + 1
 
 void initializeSocket(int *);
 void setSocketOpt(int *);
@@ -22,7 +22,7 @@ int main() {
 	 */
 	struct sockaddr_in serverAddr;
 	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_port = htons(2556);
+	serverAddr.sin_port = htons(2556);//2556 os porton futunk
 	//serverAddr.sin_addr.s_addr = INADDR_ANY;
 	inet_aton("127.0.0.1", &serverAddr.sin_addr);
 	memset(&(serverAddr.sin_zero), 0, 8);
@@ -90,7 +90,9 @@ int main() {
 			// Felszolalás küldése
 			//-----------------------------------
 			memset(message, 0, MESSAGE_LIMIT);
-			printf("Szolaljon fel kerem:");
+			memset(uzenet, 0, 255);
+			read = recv(serverFd, uzenet, 255, 0);
+			printf("%s",uzenet);
 			fflush(stdout);
 			fgets(message, MESSAGE_LIMIT, stdin);
 			send(serverFd, message, MESSAGE_LIMIT, 0);
@@ -99,7 +101,7 @@ int main() {
 			//-----------------------------------
 			memset(feedback, 0, FEEDBACK_LIMIT);
 			read = recv(serverFd, feedback, FEEDBACK_LIMIT, 0);
-			printf("Masik fel velemenye:%s", feedback);
+			printf("%s", feedback);
 			fflush(stdout);
 			msgS = 1;
 			//-----------------------------------
@@ -110,13 +112,15 @@ int main() {
 			//-------------------------------------------
 			memset(message, 0, MESSAGE_LIMIT);
 			read = recv(serverFd, message, MESSAGE_LIMIT, 0);
-			printf("Partner felszolalasa:%s", message);
+			printf("%s", message);
 			fflush(stdout);
 			//-------------------------------------------
 			// Vélemény küldése
 			//-------------------------------------------
 			memset(feedback, 0, FEEDBACK_LIMIT);
-			printf("Mondjon velemenyt kerem:");
+			memset(uzenet, 0, 255);
+			read = recv(serverFd, uzenet, 255, 0);
+			printf("%s",uzenet);
 			fgets(feedback, FEEDBACK_LIMIT, stdin);
 			send(serverFd, feedback, FEEDBACK_LIMIT, 0);
 			fflush(stdout);
@@ -131,8 +135,9 @@ int main() {
 			fgets(vote, 255, stdin);
 			send(serverFd,vote,255,0);
 			recv(serverFd,anotherClientVote,255,0);
-			printf("masik szavazat:%s",anotherClientVote);
-			if((strcmp(vote,"igen\n") == 0 || strcmp(vote,"IGEN\n") == 0) && (strcmp(anotherClientVote,"igen\n") == 0 || strcmp(anotherClientVote,"IGEN\n") == 0) )
+			memset(uzenet, 0, 255);
+			read = recv(serverFd, uzenet, 255, 0);
+			if(strcmp(uzenet,"vege") == 0)
 				break;
 			feedbS = 0;
 			msgS = 0;

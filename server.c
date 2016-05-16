@@ -6,6 +6,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <ctype.h>
+#define MESSAGE_LIMIT 1023 + 1 
+#define FEEDBACK_LIMIT 255 + 1
 
 void initializeSocket(int *);
 void setSocketOpt(int *);
@@ -60,8 +62,8 @@ int main() {
 
 	char messageFromClient[255];
 	char serverMessage[255];
-	strcpy(serverMessage,
-			"Udvozlom a konferencian, kerem valasszon nyelvet.");
+	//strcpy(serverMessage,
+	//		"Udvozlom a konferencian, kerem valasszon nyelvet.");
 	char choices[255] = "1. MAGYAR - 2. magyar";
 
 	unsigned sin_size = sizeof(struct sockaddr_in);
@@ -70,7 +72,6 @@ int main() {
 	firstClient = accept(serverFd, (struct sockaddr *) &firstClientAddr,
 			&sin_size);
 	printf("Első résztvevő csatlakozott.");
-
 	fflush(stdout);
 
 	//Üdvözlő szövegek elküldése.
@@ -81,6 +82,7 @@ int main() {
 //	send(firstClient, serverMessage, 255, 0);
 
 	//send(firstClient, choices, 255, 0);
+
 	//Választott nyelv beállítása.
 	recv(firstClient, messageFromClient, 255, 0);
 	setChosenLanguage(messageFromClient, &firstLanguage);
@@ -127,32 +129,53 @@ int main() {
 	int received = 0;
 	while (1) {
 
+		//-----------------------------------------------------------
 		//Első felszólal
-		received = recv(firstClient, firstMessage, 1023, 0);
-		//firstMessage[received] = '\0';
-		//printf("Elso kliens felszolalasa:%s\n", firstMessage);
+		strcpy(serverMessage,"Szolaljon fel kerem:");
+		translateMessageForClient(firstLanguage, serverMessage);
+		send(firstClient, serverMessage, 255, 0);
+
+		received = recv(firstClient, firstMessage, MESSAGE_LIMIT, 0);
 		translateMessageForClient(secondLanguage, firstMessage);
-		send(secondClient, firstMessage, 1023, 0);
+		send(secondClient, firstMessage, MESSAGE_LIMIT, 0);
 
+		//-----------------------------------------------------------
 		//második reagál
-		recv(secondClient, secondFeedback, 255, 0);
-		//printf("Masodik kliens velemenye:%s\n", secondFeedback);
+		strcpy(serverMessage,"Mondjon velemenyt kerem:");
+		translateMessageForClient(secondLanguage, serverMessage);
+		send(secondClient, serverMessage, 255, 0);
+		//megkapjuk a véleményt
+		received = recv(secondClient, secondFeedback, FEEDBACK_LIMIT, 0);
+		//fordítjuk
 		translateMessageForClient(firstLanguage, secondFeedback);
-		send(firstClient, secondFeedback, 255, 0);
+		//továbbküldjök a kliensnek
+		send(firstClient, secondFeedback, FEEDBACK_LIMIT, 0);
 
+		//-----------------------------------------------------------
 		//Második felszólal
-		recv(secondClient, secondMessage, 1023, 0);
-		//printf("Masodik kliens felszolalasa:%s\n", secondMessage);
+		strcpy(serverMessage,"On szolal fel most:");
+		translateMessageForClient(secondLanguage, serverMessage);
+		send(secondClient, serverMessage, 255, 0);
+		//fogadjuk a felszolalast
+		recv(secondClient, secondMessage, MESSAGE_LIMIT, 0);
+		//forditjuk
 		translateMessageForClient(firstLanguage, secondMessage);
-		send(firstClient, secondMessage, 1023, 0);
+		//továbbküldjük.
+		send(firstClient, secondMessage, MESSAGE_LIMIT, 0);
 
+		//-----------------------------------------------------------
 		//első reagál
-		recv(firstClient, firstFeedback, 255, 0);
-		//printf("Elso kliens velemenye:%s\n", firstFeedback);
+		strcpy(serverMessage,"on mond most velemenyt:");
+		translateMessageForClient(firstLanguage, serverMessage);
+		send(firstClient, serverMessage, 255, 0);
+		//fogadjuk
+		recv(firstClient, firstFeedback, FEEDBACK_LIMIT, 0);
+		//fordítjuk
 		translateMessageForClient(secondLanguage, firstFeedback);
-		send(secondClient, firstFeedback, 255, 0);
-
-		strcpy(serverMessage,"Szavazas kovetkezik, kerem Igennel,Nemmel vagy tartozkodommal valaszoljanak.");
+		//továbbküldük.
+		send(secondClient, firstFeedback, FEEDBACK_LIMIT, 0);
+		//-----------------------------------------------------------
+		strcpy(serverMessage,"Szavazas kovetkezik, kerem Igennel,Nemmel vagy tartozkodommal valaszoljanak:");
 		translateMessageForClient(firstLanguage,serverMessage);
 		send(firstClient,serverMessage,255,0);
 
@@ -165,8 +188,13 @@ int main() {
 		send(secondClient,firstVote,255,0);
 		send(firstClient,secondVote,255,0);
 
-		if((strcmp(firstVote,"igen\n") == 0 || strcmp(firstVote,"IGEN\n") == 0) && (strcmp(secondVote,"igen\n") == 0 || strcmp(secondVote,"IGEN\n") == 0) )
+		if((strcmp(firstVote,"igen\n") == 0 || strcmp(firstVote,"IGEN\n") == 0) && (strcmp(secondVote,"igen\n") == 0 || strcmp(secondVote,"IGEN\n") == 0) ) {
+			strcpy(serverMessage,"vege");
+			send(firstClient,serverMessage,255,0);
+			send(secondClient,serverMessage,255,0);
 				break;
+		}
+			
 
 	}
 
