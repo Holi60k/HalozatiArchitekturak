@@ -177,15 +177,15 @@ int main() {
 		send(secondClient,firstVote,255,0);
 		send(firstClient,secondVote,255,0);
 		//Validáljuk ha mind a ketten elfogadták
-		if((strcmp(firstVote,"igen\n") == 0 || strcmp(firstVote,"IGEN\n") == 0) && (strcmp(secondVote,"igen\n") == 0 || strcmp(secondVote,"IGEN\n") == 0) ) {
-			strcpy(serverMessage,"vege");
-			send(firstClient,serverMessage,255,0);
-			send(secondClient,serverMessage,255,0);
-				break;
-		} else {
+		if((strcmp(firstVote,"nem\n") == 0 || strcmp(firstVote,"NEM\n") == 0) || (strcmp(secondVote,"nem\n") == 0 || strcmp(secondVote,"NEM\n") == 0) ) {
 			strcpy(serverMessage,"folytat");
 			send(firstClient,serverMessage,255,0);
 			send(secondClient,serverMessage,255,0);
+		} else {
+			strcpy(serverMessage,"vege");
+			send(firstClient,serverMessage,255,0);
+			send(secondClient,serverMessage,255,0);
+			break;
 		}
 		//-----------------------------------------------------------
 			

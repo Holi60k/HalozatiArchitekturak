@@ -18,14 +18,14 @@ int parseOrder(char[]);
 int main() {
 
 	/**
-	 * A szerver címét leíró dolgokat beállítjuk.
+	 * A célszerver címét leíró dolgokat beállítjuk.
 	 */
 	struct sockaddr_in serverAddr;
-	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_family = AF_INET; //cím család
 	serverAddr.sin_port = htons(2556);//2556 os porton futunk
 	//serverAddr.sin_addr.s_addr = INADDR_ANY;
-	inet_aton("127.0.0.1", &serverAddr.sin_addr);
-	memset(&(serverAddr.sin_zero), 0, 8);
+	inet_aton("127.0.0.1", &serverAddr.sin_addr);// ip cím
+	memset(&(serverAddr.sin_zero), 0, 8);//kitöltő
 	int serverFd;
 
 	// Inicializáljuk a socketet.
@@ -58,8 +58,8 @@ int main() {
 //	recv(serverFd, uzenet, 255, 0);
 //	printf("%s", uzenet);
 
-	printf("Valaszthato nyelvek:MAGYAR - magyar\n");
-	printf("Kerem valasszon nyelvet:");
+	printf("VALASZTHATO NYELVEK/valaszthato nyelvek:MAGYAR - magyar\n");
+	printf("KEREM VALASSZON NYELVET/kerem valasszon nyelvet:");
 	do {
 		if(error > 0)
 			printf("Valasszon ujra:");
